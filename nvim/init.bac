@@ -1,0 +1,196 @@
+-- ~/.config/nvim/init.lua
+require("core.options")
+require("core.keymaps")
+require("core.lazy")
+
+-- ===========================
+--  Bootstrap lazy.nvim
+-- ===========================
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable",
+    lazypath,
+  })
+end
+vim.opt.rtp:prepend(lazypath)
+
+-- ===========================
+--  Plugins
+-- ===========================
+require("lazy").setup({
+  -- Core visuals
+  { "nvim-telescope/telescope.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
+  { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
+  { "lewis6991/gitsigns.nvim" },
+})
+-- ===========================
+--  General Settings
+-- ===========================
+vim.opt.number = true
+vim.opt.relativenumber = true
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.expandtab = true
+vim.opt.termguicolors = true
+vim.opt.mouse = "a"
+vim.opt.list = true
+vim.opt.listchars:append("space:⋅")
+
+-- ===========================
+--  Keymaps
+-- ===========================
+local nvim_tree = require("nvim-tree")
+
+nvim_tree.setup({
+  update_cwd = true, -- update nvim cwd when switching files
+  update_focused_file = {
+    enable = true,
+    update_cwd = true, -- follow focused file
+  },
+  hijack_cursor = true,
+  --   respect_buf_cwd = false,  -- we handle cwd ourselves
+  view = { side = "left", width = 35 },
+})
+vim.g.mapleader = " "
+
+local map = vim.keymap.set
+map("n", "<leader>e", ":NvimTreeToggle<CR>", { desc = "Toggle file tree" })
+map("n", "<leader>ff", ":Telescope find_files<CR>", { desc = "Find files" })
+map("n", "<leader>fg", ":Telescope live_grep<CR>", { desc = "Grep files" })
+map("n", "<leader>fb", ":Telescope buffers<CR>", { desc = "List buffers" })
+map("n", "<leader>fh", ":Telescope help_tags<CR>", { desc = "Help tags" })
+map("n", "<leader>v", ":vsplit<CR>", { desc = "Vertical Split" })
+map("n", "<leader>h", ":split<CR>", { desc = "Horizontal Split" })
+map("n", "<C-t>", ":tabnew<CR>", { desc = "New Tab" })
+map("n", "<C-w>", ":wq<CR>", { desc = "Close Tab" })
+-- TODO: is this the correct way to do new tabs?
+
+vim.keymap.set("n", "<leader>t", function()
+  require("nvim-tree.api").tree.focus()
+end, { desc = "Focus NvimTree" })
+
+-- Enable mouse in all modes
+vim.opt.mouse = "a"
+
+-- Move cursor with scroll wheel
+vim.api.nvim_set_keymap("n", "<ScrollWheelUp>", "7k", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("n", "<ScrollWheelDown>", "7j", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("i", "<ScrollWheelUp>", "<Up>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap("i", "<ScrollWheelDown>", "<Down>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap(
+  "n",
+  "<leader>gc",
+  "<cmd>lua require('telescope.builtin').git_commits()<CR>",
+  { noremap = true, silent = true }
+)
+
+vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
+vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
+
+-- ===========================
+--  Plugin Setup
+-- ===========================
+require("nvim-tree").setup({
+  hijack_cursor = true,
+  update_cwd = true,
+  respect_buf_cwd = true,
+})
+require("lualine").setup({ options = { theme = "auto" } })
+
+require("gitsigns").setup()
+
+-- Treesitter (syntax highlighting)
+require("nvim-treesitter.configs").setup({
+  ensure_installed = { "lua", "python", "javascript", "typescript", "html", "css" },
+  highlight = { enable = true },
+  indent = { enable = true },
+})
+
+-- ===========================
+--  LSP (New API for Neovim ≥ 0.11)
+-- ===========================
+local capabilities = require("cmp_nvim_lsp").default_capabilities()
+
+-- ===========================
+--  LSP (New API for Neovim ≥ 0.11)
+-- ===========================
+local capabilities = require("cmp_nvim_lsp").default_capabilities()
+
+-- Define configurations (but don't start yet)
+vim.lsp.config.lua_ls = {
+  cmd = { "lua-language-server" },
+  settings = {
+    Lua = {
+      diagnostics = { globals = { "vim" } },
+    },
+  },
+  capabilities = capabilities,
+}
+
+vim.lsp.config.ts_ls = {
+  cmd = { "typescript-language-server", "--stdio" },
+  capabilities = capabilities,
+}
+
+vim.lsp.config.pyright = {
+  cmd = { "pyright-langserver", "--stdio" },
+  capabilities = capabilities,
+}
+
+-- Automatically start servers for supported filetypes
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "lua", "javascript", "typescript", "python" },
+  callback = function()
+    local ft = vim.bo.filetype
+    local cfg = vim.lsp.config[ft .. "_ls"]
+    if cfg then
+      vim.lsp.start(cfg)
+    end
+  end,
+})
+
+-- Helper function to simplify configs
+
+--setup_server("ts_ls")
+--setup_server("pyright")
+
+-- Start servers automatically when opening matching files
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "lua", "javascript", "typescript", "python" },
+  callback = function()
+    vim.lsp.start(vim.lsp.config[vim.bo.filetype .. "_ls"] or {})
+  end,
+})
+
+-- Autocomplete
+local cmp = require("cmp")
+cmp.setup({
+  snippet = {
+    expand = function(args)
+      luasnip.lsp_expand(args.body)
+    end,
+  },
+  mapping = {
+    ["<Tab>"] = cmp.mapping(function(fallback)
+      if cmp.visible() then
+        cmp.confirm({ select = true }) -- select first item if visible
+      else
+        fallback()
+      end
+    end, { "i", "s" }),
+    ["<CR>"] = cmp.mapping.confirm({ select = false }),
+    ["<C-Space>"] = cmp.mapping.complete(),
+    ["<C-n>"] = cmp.mapping.select_next_item(),
+    ["<C-p>"] = cmp.mapping.select_prev_item(),
+  },
+  sources = cmp.config.sources({
+    { name = "nvim_lsp" },
+    { name = "buffer" },
+    { name = "path" },
+  }),
+})
