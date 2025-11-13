@@ -1,0 +1,83 @@
+format = """
+[░▒▓]({{colors.bg_1}})\
+[ 󰏚 ](fg:#090c0c bg:{{colors.bg_1}} )\
+[]( fg:{{colors.bg_1}} bg:{{colors.bg_2}})\
+$directory\
+[](fg:{{colors.bg_2}} bg:{{colors.bg_3}})\
+$git_branch\
+$git_status\
+$git_metrics\
+[](fg:{{colors.bg_3}} bg:{{colors.bg_4}})\
+$nodejs\
+$rust\
+$golang\
+$php\
+$python\
+[](fg:{{colors.bg_4}} bg:{{colors.bg_5}})\
+$time\
+[](fg:{{colors.bg_5}} )\
+\n$character"""
+
+[directory]
+style = "fg:#090c0c bg:{{colors.bg_2}}"
+format = "[ $path ]($style)"
+truncation_length = 2
+
+[directory.substitutions]
+"Documents" = "󰈙"
+"Downloads" = ""
+"Music" = ""
+"Pictures" = ""
+"Projects" = ""
+
+[git_branch]
+symbol = ""
+style = "bg:{{colors.bg_3}}"
+format = '[[ $symbol $branch ](fg:#769ff0 bg:{{colors.bg_3}})]($style)'
+
+[git_status]
+modified='[M](fg:#f78e25 bg:{{colors.bg_3}})'
+untracked='[U](fg:#ff836e bg:{{colors.bg_3}})'
+staged='[S](fg:#9aff8f bg:{{colors.bg_3}})'
+deleted='[X](fg:#d60924 bg:{{colors.bg_3}})'
+style = "bg:{{colors.bg_3}}"
+format = '[[($all_status$ahead_behind )](fg:#769ff0 bg:{{colors.bg_3}})]($style)'
+
+[git_metrics]
+added_style = "fg:bold green bg:{{colors.bg_3}}"
+deleted_style = "fg:bold red bg:{{colors.bg_3}}"
+format = '[([+$added]($added_style)) ([-$deleted]($deleted_style))](bg:{{colors.bg_3}})'
+disabled=false
+
+[nodejs]
+symbol = ""
+style = "bg:{{colors.bg_4}}"
+format = '[[ $symbol ($version) ](fg:#769ff0 bg:{{colors.bg_4}})]($style)'
+
+[rust]
+symbol = ""
+style = "bg:{{colors.bg_4}}"
+format = '[[ $symbol ($version) ](fg:#769ff0 bg:{{colors.bg_4}})]($style)'
+
+[golang]
+symbol = ""
+style = "bg:{{colors.bg_4}}"
+format = '[[ $symbol ($version) ](fg:#769ff0 bg:{{colors.bg_4}})]($style)'
+
+[php]
+symbol = ""
+style = "bg:{{colors.bg_4}}"
+format = '[[ $symbol ($version) ](fg:#769ff0 bg:{{colors.bg_4}})]($style)'
+
+[python]
+symbol = ""
+style = "bg:#69e8ff"
+format = '[[ $symbol ($version) ](fg:#69e8ff bg:{{colors.bg_4}})]($style)'
+python_binary = 'python3'
+
+[time]
+disabled = false
+time_format = "%R %v"
+style = "bg:{{colors.bg_5}}"
+format = '[[  $time ](fg:#a0a9cb bg:{{colors.bg_5}})]($style)'
+
