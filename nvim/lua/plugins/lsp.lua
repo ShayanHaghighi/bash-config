@@ -17,38 +17,82 @@ return {
       "hrsh7th/cmp-nvim-lsp",
       "hrsh7th/cmp-buffer",
       "hrsh7th/cmp-path",
+      "saadparwaiz1/cmp_luasnip",
       "L3MON4D3/LuaSnip",
+      "rafamadriz/friendly-snippets",
+      "hrsh7th/cmp-nvim-lsp-signature-help",
+      "onsails/lspkind.nvim", -- icons
+      "ray-x/lsp_signature.nvim", -- inline function hints
     },
     config = function()
-      -- ===== Autocompletion (cmp) =====
+      -- ===== nvim-cmp setup =====
       local cmp = require("cmp")
+      local luasnip = require("luasnip")
+      local lspkind = require("lspkind")
+
+      require("luasnip.loaders.from_vscode").lazy_load()
+
       cmp.setup({
+        completion = { autocomplete = false },
         snippet = {
           expand = function(args)
-            require("luasnip").lsp_expand(args.body)
+            luasnip.lsp_expand(args.body)
           end,
         },
         mapping = {
           ["<Tab>"] = cmp.mapping(function(fallback)
             if cmp.visible() then
-              cmp.confirm({ select = true })
+              cmp.select_next_item()
+            elseif luasnip.expand_or_jumpable() then
+              luasnip.expand_or_jump()
             else
               fallback()
             end
           end, { "i", "s" }),
-          ["<CR>"] = cmp.mapping.confirm({ select = false }),
+          ["<S-Tab>"] = cmp.mapping(function(fallback)
+            if cmp.visible() then
+              cmp.select_prev_item()
+            elseif luasnip.jumpable(-1) then
+              luasnip.jump(-1)
+            else
+              fallback()
+            end
+          end, { "i", "s" }),
+          ["<CR>"] = cmp.mapping.confirm({ select = true }),
           ["<C-Space>"] = cmp.mapping.complete(),
           ["<C-n>"] = cmp.mapping.select_next_item(),
           ["<C-p>"] = cmp.mapping.select_prev_item(),
         },
         sources = cmp.config.sources({
           { name = "nvim_lsp" },
+          { name = "nvim_lsp_signature_help" },
+          { name = "luasnip" },
           { name = "buffer" },
           { name = "path" },
         }),
+        formatting = {
+          format = lspkind.cmp_format({
+            mode = "symbol_text",
+            maxwidth = 50,
+            ellipsis_char = "...",
+          }),
+        },
+        sorting = {
+          priority_weight = 2,
+          comparators = {
+            cmp.config.compare.locality,
+            cmp.config.compare.exact,
+            cmp.config.compare.score,
+            cmp.config.compare.recently_used,
+            cmp.config.compare.kind,
+            cmp.config.compare.sort_text,
+            cmp.config.compare.length,
+            cmp.config.compare.order,
+          },
+        },
       })
 
-      -- ===== LSP Setup (new API) =====
+      -- ===== LSP setup =====
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
       vim.lsp.config.lua_ls = {
@@ -64,8 +108,9 @@ return {
         capabilities = capabilities,
       }
 
-      vim.lsp.config.pyright = {
-        cmd = { "pyright-langserver", "--stdio" },
+      -- 🔥 Use basedpyright for smarter Python completion
+      vim.lsp.config.basedpyright = {
+        cmd = { "basedpyright-langserver", "--stdio" },
         capabilities = capabilities,
       }
 
@@ -73,10 +118,19 @@ return {
         pattern = { "lua", "javascript", "typescript", "python" },
         callback = function()
           local cfg = vim.lsp.config[vim.bo.filetype .. "_ls"]
+            or (vim.bo.filetype == "python" and vim.lsp.config.basedpyright)
           if cfg then
             vim.lsp.start(cfg)
           end
         end,
+      })
+
+      -- ===== Signature hints =====
+      require("lsp_signature").setup({
+        bind = true,
+        hint_enable = true,
+        hint_prefix = " ",
+        handler_opts = { border = "rounded" },
       })
     end,
   },
@@ -114,10 +168,9 @@ return {
       formatters_by_ft = {
         lua = { "stylua" },
         json = { "fixjson" },
+        python = { "black" },
         -- Conform will run multiple formatters sequentially
         --python = { "isort", "black" },
-        -- You can customize some of the format options for the filetype (:help conform.format)
-        --rust = { "rustfmt", lsp_format = "fallback" },
         -- Conform will run the first available formatter
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
       },
