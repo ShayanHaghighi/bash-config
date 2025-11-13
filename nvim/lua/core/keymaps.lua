@@ -19,8 +19,8 @@ vim.opt.mouse = "a"
 -- Move cursor with scroll wheel
 vim.api.nvim_set_keymap("n", "<ScrollWheelUp>", "7k", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<ScrollWheelDown>", "7j", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("i", "<ScrollWheelUp>", "<Up>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("i", "<ScrollWheelDown>", "<Down>", { noremap = true, silent = true })
+--vim.api.nvim_set_keymap("i", "<ScrollWheelUp>", "<Up>", { noremap = true, silent = true })
+--vim.api.nvim_set_keymap("i", "<ScrollWheelDown>", "<Down>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap(
   "n",
   "<leader>gc",

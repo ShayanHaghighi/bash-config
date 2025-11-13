@@ -33,7 +33,7 @@ return {
       require("luasnip.loaders.from_vscode").lazy_load()
 
       cmp.setup({
-        completion = { autocomplete = false },
+        completion = { autocomplete = { require("cmp.types").cmp.TriggerEvent.TextChanged } },
         snippet = {
           expand = function(args)
             luasnip.lsp_expand(args.body)
@@ -42,26 +42,25 @@ return {
         mapping = {
           ["<Tab>"] = cmp.mapping(function(fallback)
             if cmp.visible() then
-              cmp.select_next_item()
-            elseif luasnip.expand_or_jumpable() then
-              luasnip.expand_or_jump()
+              cmp.confirm({ select = true })
             else
               fallback()
             end
           end, { "i", "s" }),
-          ["<S-Tab>"] = cmp.mapping(function(fallback)
-            if cmp.visible() then
-              cmp.select_prev_item()
-            elseif luasnip.jumpable(-1) then
-              luasnip.jump(-1)
-            else
-              fallback()
-            end
-          end, { "i", "s" }),
+
+          -- Enter also confirms
           ["<CR>"] = cmp.mapping.confirm({ select = true }),
-          ["<C-Space>"] = cmp.mapping.complete(),
-          ["<C-n>"] = cmp.mapping.select_next_item(),
+
+          -- Navigation with arrow keys
+          ["<Up>"] = cmp.mapping.select_prev_item(),
+          ["<Down>"] = cmp.mapping.select_next_item(),
+
+          -- Optional: C-p / C-n as alternative navigation
           ["<C-p>"] = cmp.mapping.select_prev_item(),
+          ["<C-n>"] = cmp.mapping.select_next_item(),
+
+          -- Manual completion trigger
+          ["<C-Space>"] = cmp.mapping.complete(),
         },
         sources = cmp.config.sources({
           { name = "nvim_lsp" },
