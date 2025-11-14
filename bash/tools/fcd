@@ -1,0 +1,78 @@
+#!/bin/bash
+
+
+show_all=false
+recursive=false
+interactive=false
+dir="."
+
+while (( "$#" )); do
+    case "$1" in
+        -a) show_all=true ;;
+        -r) recursive=true ;;
+        -i) interactive=true ;;
+        -*) echo "Unknown option: $1"; return ;;
+        *) dir="$1" ;;
+    esac
+    shift
+done
+
+fd_opts="--type d --type f --exclude .git --color=always"
+[ "$show_all" = "true" ] && fd_opts="$fd_opts --hidden"
+[ "$recursive" = "false" ] && fd_opts="$fd_opts --maxdepth 1"
+
+if [ "$interactive" = "false" ]; then
+    target=$(fdfind $fd_opts . $dir | fzf \
+            --height 50% \
+            --preview-window 'right:70%,nowrap' \
+            --ansi \
+            --reverse \
+        --preview '[[ -d {} ]] && eza -lah --color=always  {} || batcat --color=always {} --style=plain --paging=never') || return
+
+    if [ -z "$target" ]; then
+        return
+    elif [ -d "$target" ]; then
+        cd "$target" || return
+    else
+        cd "$(dirname "$target")" && nano "$target" || return
+    fi
+
+else
+
+
+    while true; do
+        target=$(
+            {
+                echo "EXIT (quit)";       # quit option
+                echo "..";        # go up one dir
+                fdfind $fd_opts . "$dir";
+            } | fzf --height 50% \
+                --reverse \
+                --ansi \
+                --preview-window 'right:70%,nowrap' \
+                --preview '[[ -d {} ]] && eza -lah --color=always {} || batcat --color=always {} --style=plain --paging=never'
+        ) || break  # if fzf is canceled
+
+        # handle special selections
+        if [[ "$?" == "130" ]]; then
+            exit 1
+            break
+        elif [[ "$target" == "EXIT (quit)" ]]; then
+            break
+        elif [[ "$target" == ".." ]]; then
+            cd .. || break
+            dir="."  # reset dir to current
+        else
+            if [[ -d "$target" ]]; then
+                cd "$target" || break
+                dir="."  # reset dir to current
+            else
+                cd "$(dirname "$target")" || break
+                dir="."  # reset dir to current
+            fi
+        fi
+    done
+
+fi
+
+
