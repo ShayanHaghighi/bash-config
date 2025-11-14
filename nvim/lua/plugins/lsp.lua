@@ -21,11 +21,10 @@ return {
       "L3MON4D3/LuaSnip",
       "rafamadriz/friendly-snippets",
       "hrsh7th/cmp-nvim-lsp-signature-help",
-      "onsails/lspkind.nvim", -- icons
-      "ray-x/lsp_signature.nvim", -- inline function hints
+      "onsails/lspkind.nvim",
+      "ray-x/lsp_signature.nvim",
     },
     config = function()
-      -- ===== nvim-cmp setup =====
       local cmp = require("cmp")
       local luasnip = require("luasnip")
       local lspkind = require("lspkind")
@@ -107,7 +106,7 @@ return {
         capabilities = capabilities,
       }
 
-      -- 🔥 Use basedpyright for smarter Python completion
+      -- Use basedpyright for smarter Python completion
       vim.lsp.config.basedpyright = {
         cmd = { "basedpyright-langserver", "--stdio" },
         capabilities = capabilities,
@@ -168,6 +167,8 @@ return {
         lua = { "stylua" },
         json = { "fixjson" },
         python = { "black" },
+        bash = { "beautysh" },
+        shell = { "beautysh" },
         -- Conform will run multiple formatters sequentially
         --python = { "isort", "black" },
         -- Conform will run the first available formatter
